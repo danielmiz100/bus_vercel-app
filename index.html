@@ -58,6 +58,9 @@ function load(stopId, dest) {
   fetch(`/api/bus?stop=${stopId}`)
     .then(r => r.json())
     .then(data => {
+
+      console.log("API data:", data); // 🔍 debug
+
       const filter = DEST_FILTERS[dest];
 
       const results = data.filter(b => {
@@ -66,7 +69,10 @@ function load(stopId, dest) {
         const keywordMatch = filter.keywords.length === 0 ||
           filter.keywords.some(k => d.includes(k));
 
-        const directionMatch = filter.directions.includes(b.direction);
+        // ✅ FIXED: flexible direction match
+        const directionMatch = filter.directions.some(dir =>
+          b.direction && b.direction.includes(dir)
+        );
 
         return keywordMatch && directionMatch;
       });
@@ -76,7 +82,7 @@ function load(stopId, dest) {
       document.getElementById("results").innerHTML =
         results.map(b => `
           <div class="bus">
-            ?? ${b.route} ? ${b.destination}<br>
+            🚌 ${b.route} → ${b.destination}<br>
             <strong>${b.minutes} min</strong>
           </div>
         `).join("") || "No buses.";
