@@ -1,7 +1,6 @@
 export default async function handler(req, res) {
   const { stop } = req.query;
 
-  // Define stops with realistic routes
   const stops = {
     "52035": [
       { route: "145", destination: "SFU", direction: "N" },
@@ -16,22 +15,28 @@ export default async function handler(req, res) {
 
   const routes = stops[stop] || stops["52035"];
 
+  function getEarlyBias() {
+    return Math.random() < 0.2 ? -1 : 0; // 20% early
+  }
+
   function generateArrivals() {
     const buses = [];
 
     routes.forEach(r => {
-      const count = Math.floor(Math.random() * 2) + 1;
+      const baseTimes = [3, 8, 15];
 
-      let base = Math.floor(Math.random() * 5) + 1;
+      baseTimes.forEach(t => {
+        const adjustment = getEarlyBias();
 
-      for (let i = 0; i < count; i++) {
+        const minutes = Math.max(0, t + adjustment);
+
         buses.push({
           route: r.route,
           destination: r.destination,
           direction: r.direction,
-          minutes: base + i * (5 + Math.floor(Math.random() * 5))
+          minutes
         });
-      }
+      });
     });
 
     return buses.sort((a, b) => a.minutes - b.minutes);
