@@ -1,31 +1,27 @@
 export default async function handler(req, res) {
-  const { stop } = req.query;
+  try {
+    const r = await fetch(
+      "https://api-v3.mbta.com/predictions?filter[stop]=place-sstat&include=route"
+    );
 
-  if (!stop) {
-    return res.status(400).json({ error: "Missing stop parameter" });
+    const json = await r.json();
+
+    const now = Date.now();
+
+    const buses = json.data.slice(0, 10).map(item => {
+      const arrival = new Date(item.attributes.arrival_time).getTime();
+
+      return {
+        route: item.relationships.route.data.id,
+        destination: "Inbound",
+        direction: item.attributes.direction_id === 0 ? "EB" : "WB",
+        minutes: Math.max(0, Math.round((arrival - now) / 60000))
+      };
+    });
+
+    res.status(200).json(buses);
+
+  } catch (e) {
+    res.status(500).json({ error: "failed", details: e.message });
   }
-
-  // Simulated routes for Vancouver-style stops
-  const routes = [
-    { route: "99", destination: "UBC" },
-    { route: "25", destination: "Brentwood" },
-    { route: "R4", destination: "Joyce Station" },
-    { route: "14", destination: "Hastings" },
-    { route: "9", destination: "Downtown" }
-  ];
-
-  // Generate realistic arrival times
-  function generateArrivals() {
-    return routes.map(r => ({
-      route: r.route,
-      destination: r.destination,
-      minutes: Math.floor(Math.random() * 20) + 1,
-      direction: "EB"
-    }));
-  }
-
-  // Sort by soonest arrival
-  const buses = generateArrivals().sort((a, b) => a.minutes - b.minutes);
-
-  res.status(200).json(buses);
 }
