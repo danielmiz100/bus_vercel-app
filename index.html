@@ -1,78 +1,26 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bus Finder</title>
-  <style>
-    body { font-family: -apple-system; text-align: center; padding: 20px; }
-    button {
-      font-size: 18px;
-      padding: 15px;
-      margin: 10px;
-      width: 90%;
-    }
-    .bus {
-      margin-top: 15px;
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-    }
-  </style>
-</head>
-<body>
-
-<h2>Bus Finder</h2>
-
-<button onclick="start('lougheed')">Lougheed</button>
-<button onclick="start('burquitlam')">Burquitlam</button>
-<button onclick="start('regent')">Regent (EB)</button>
-
-<div id="results">Select a destination</div>
-
 <script>
-const DEST_FILTERS = {
-  lougheed: { keywords: ["brentwood", "downtown"] },
-  burquitlam: { keywords: ["ubc", "joyce", "hastings"] },
-  regent: { keywords: [] } // show all
-};
-
-const FIXED_STOPS = {
-  regent: "52813"
-};
+let interval = null;
 
 function start(dest) {
   document.getElementById("results").innerHTML = "Loading...";
+
   load();
+
+  if (interval) clearInterval(interval);
+  interval = setInterval(load, 30000);
 }
 
-  navigator.geolocation.getCurrentPosition(() => {
-    const stop = "52035";
-    load(stop, dest);
-  });
-}
-
-function load(stopId, dest) {
-  fetch(`/api/bus?stop=${stopId}`)
+function load() {
+  fetch(`/api/bus`)
     .then(r => r.json())
     .then(data => {
 
       console.log("API data:", data);
 
-      const filter = DEST_FILTERS[dest];
-
-      const results = data.filter(b => {
-        const d = b.destination.toLowerCase();
-
-        if (!filter.keywords.length) return true;
-
-        return filter.keywords.some(k => d.includes(k));
-      });
-
-      results.sort((a,b)=>a.minutes-b.minutes);
-
       document.getElementById("results").innerHTML =
-        results.map(b => `
+        data.map(b => `
           <div class="bus">
-            🚌 ${b.route} → ${b.destination}<br>
+            🚌 ${b.route} → ${b.destination} (${b.direction})<br>
             <strong>${b.minutes} min</strong>
           </div>
         `).join("") || "No buses.";
@@ -82,6 +30,3 @@ function load(stopId, dest) {
     });
 }
 </script>
-
-</body>
-</html>
