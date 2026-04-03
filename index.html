@@ -70,9 +70,7 @@ function load(stopId, dest) {
           filter.keywords.some(k => d.includes(k));
 
         // ✅ FIXED: flexible direction match
-        const directionMatch = filter.directions.some(dir =>
-          b.direction && b.direction.includes(dir)
-        );
+        const directionMatch = true;
 
         return keywordMatch && directionMatch;
       });
