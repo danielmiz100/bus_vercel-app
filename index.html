@@ -30,9 +30,9 @@
 
 <script>
 const DEST_FILTERS = {
-  lougheed: { keywords: ["lougheed"], directions: ["W"] },
-  burquitlam: { keywords: ["burquitlam"], directions: ["W","N"] },
-  regent: { keywords: [], directions: ["E"] }
+  lougheed: { keywords: ["brentwood", "downtown"] },
+  burquitlam: { keywords: ["ubc", "joyce", "hastings"] },
+  regent: { keywords: [] } // show all
 };
 
 const FIXED_STOPS = {
@@ -47,9 +47,8 @@ function start(dest) {
     return;
   }
 
-  navigator.geolocation.getCurrentPosition(pos => {
-    // For simplicity, use known stops
-    const stop = "52035"; // fallback (Burquitlam area)
+  navigator.geolocation.getCurrentPosition(() => {
+    const stop = "52035";
     load(stop, dest);
   });
 }
@@ -59,11 +58,17 @@ function load(stopId, dest) {
     .then(r => r.json())
     .then(data => {
 
-      console.log("API data:", data); // 🔍 debug
+      console.log("API data:", data);
 
       const filter = DEST_FILTERS[dest];
 
-      const results = data; // ✅ show everything for now
+      const results = data.filter(b => {
+        const d = b.destination.toLowerCase();
+
+        if (!filter.keywords.length) return true;
+
+        return filter.keywords.some(k => d.includes(k));
+      });
 
       results.sort((a,b)=>a.minutes-b.minutes);
 
