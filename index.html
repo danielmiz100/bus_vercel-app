@@ -3,57 +3,97 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bus Finder</title>
+
   <style>
-    body { font-family: -apple-system; text-align: center; padding: 20px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
     button {
       font-size: 18px;
       padding: 15px;
       margin: 10px;
       width: 90%;
+      border-radius: 10px;
+      border: none;
+      background: #007aff;
+      color: white;
     }
+
+    button:active {
+      background: #005bb5;
+    }
+
     .bus {
       margin-top: 15px;
-      padding: 10px;
+      padding: 12px;
       border-bottom: 1px solid #ddd;
+      font-size: 16px;
+    }
+
+    .time {
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 5px;
     }
   </style>
 </head>
+
 <body>
 
-<h2>Bus Finder</h2>
+<h2>🚌 Bus Finder</h2>
 
-<button onclick="start()">Lougheed</button>
-<button onclick="start()">Burquitlam</button>
-<button onclick="start()">Regent (EB)</button>
+<button onclick="start('lougheed')">Lougheed</button>
+<button onclick="start('burquitlam')">Burquitlam</button>
+<button onclick="start('regent')">Regent (EB)</button>
 
 <div id="results">Select a destination</div>
 
 <script>
 let interval = null;
+let currentStop = null;
 
-function start() {
+function start(dest) {
   document.getElementById("results").innerHTML = "Loading...";
+
+  // Map buttons to stops
+  if (dest === "regent") currentStop = "52813";
+  else currentStop = "52035";
 
   load();
 
+  // Auto-refresh every 30s
   if (interval) clearInterval(interval);
   interval = setInterval(load, 30000);
 }
 
 function load() {
-  fetch(`/api/bus`)
+  if (!currentStop) return;
+
+  fetch(`/api/bus?stop=${currentStop}`)
     .then(r => r.json())
     .then(data => {
 
       console.log("API data:", data);
 
+      if (!data.length) {
+        document.getElementById("results").innerHTML = "No buses.";
+        return;
+      }
+
       document.getElementById("results").innerHTML =
         data.map(b => `
           <div class="bus">
-            🚌 ${b.route} → ${b.destination} (${b.direction})<br>
-            <strong>${b.minutes} min</strong>
+            🚌 ${b.route} → ${b.destination} (${b.direction})
+            <div class="time">${b.minutes} min</div>
           </div>
-        `).join("") || "No buses.";
+        `).join("");
     })
     .catch(err => {
       console.error(err);
