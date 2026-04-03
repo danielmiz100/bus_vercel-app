@@ -8,16 +8,26 @@ export default async function handler(req, res) {
 
     const now = Date.now();
 
-    const buses = json.data.slice(0, 10).map(item => {
-      const arrival = new Date(item.attributes.arrival_time).getTime();
+    const buses = json.data
+      .map(item => {
+        const arrivalTime = item.attributes.arrival_time;
 
-      return {
-        route: item.relationships.route.data.id,
-        destination: "Inbound",
-        direction: item.attributes.direction_id === 0 ? "EB" : "WB",
-        minutes: Math.max(0, Math.round((arrival - now) / 60000))
-      };
-    });
+        if (!arrivalTime) return null; // skip invalid
+
+        const arrival = new Date(arrivalTime).getTime();
+        const minutes = Math.round((arrival - now) / 60000);
+
+        if (minutes < 0) return null; // skip past buses
+
+        return {
+          route: item.relationships.route.data.id,
+          destination: "Inbound",
+          direction: item.attributes.direction_id === 0 ? "EB" : "WB",
+          minutes
+        };
+      })
+      .filter(Boolean)
+      .slice(0, 10);
 
     res.status(200).json(buses);
 
