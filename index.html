@@ -41,11 +41,8 @@ const FIXED_STOPS = {
 
 function start(dest) {
   document.getElementById("results").innerHTML = "Loading...";
-
-  if (FIXED_STOPS[dest]) {
-    load(FIXED_STOPS[dest], dest);
-    return;
-  }
+  load();
+}
 
   navigator.geolocation.getCurrentPosition(() => {
     const stop = "52035";
