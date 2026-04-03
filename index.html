@@ -1,7 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bus Finder</title>
+  <style>
+    body { font-family: -apple-system; text-align: center; padding: 20px; }
+    button {
+      font-size: 18px;
+      padding: 15px;
+      margin: 10px;
+      width: 90%;
+    }
+    .bus {
+      margin-top: 15px;
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Bus Finder</h2>
+
+<button onclick="start()">Lougheed</button>
+<button onclick="start()">Burquitlam</button>
+<button onclick="start()">Regent (EB)</button>
+
+<div id="results">Select a destination</div>
+
 <script>
 let interval = null;
 
-function start(dest) {
+function start() {
   document.getElementById("results").innerHTML = "Loading...";
 
   load();
@@ -25,8 +55,12 @@ function load() {
           </div>
         `).join("") || "No buses.";
     })
-    .catch(() => {
+    .catch(err => {
+      console.error(err);
       document.getElementById("results").innerHTML = "Error loading buses.";
     });
 }
 </script>
+
+</body>
+</html>
