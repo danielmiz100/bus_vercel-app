@@ -63,17 +63,7 @@ function load(stopId, dest) {
 
       const filter = DEST_FILTERS[dest];
 
-      const results = data.filter(b => {
-        const d = b.destination.toLowerCase();
-
-        const keywordMatch = filter.keywords.length === 0 ||
-          filter.keywords.some(k => d.includes(k));
-
-        // ✅ FIXED: flexible direction match
-        const directionMatch = true;
-
-        return keywordMatch && directionMatch;
-      });
+      const results = data; // ✅ show everything for now
 
       results.sort((a,b)=>a.minutes-b.minutes);
 
