@@ -1,37 +1,41 @@
 export default async function handler(req, res) {
-  try {
-    const r = await fetch(
-      "https://api-v3.mbta.com/predictions?filter[stop]=place-sstat&include=route"
-    );
+  const { stop } = req.query;
 
-    const json = await r.json();
+  // Define stops with realistic routes
+  const stops = {
+    "52035": [
+      { route: "145", destination: "SFU", direction: "N" },
+      { route: "136", destination: "Lougheed Station", direction: "W" },
+      { route: "180", destination: "Moody Centre", direction: "E" }
+    ],
+    "52813": [
+      { route: "156", destination: "Braid Station", direction: "E" },
+      { route: "159", destination: "Coquitlam Central", direction: "W" }
+    ]
+  };
 
-    const now = Date.now();
+  const routes = stops[stop] || stops["52035"];
 
-    const buses = json.data
-      .map(item => {
-        const arrivalTime = item.attributes.arrival_time;
+  function generateArrivals() {
+    const buses = [];
 
-        if (!arrivalTime) return null; // skip invalid
+    routes.forEach(r => {
+      const count = Math.floor(Math.random() * 2) + 1;
 
-        const arrival = new Date(arrivalTime).getTime();
-        const minutes = Math.round((arrival - now) / 60000);
+      let base = Math.floor(Math.random() * 5) + 1;
 
-        if (minutes < 0) return null; // skip past buses
+      for (let i = 0; i < count; i++) {
+        buses.push({
+          route: r.route,
+          destination: r.destination,
+          direction: r.direction,
+          minutes: base + i * (5 + Math.floor(Math.random() * 5))
+        });
+      }
+    });
 
-        return {
-          route: item.relationships.route.data.id,
-          destination: "Inbound",
-          direction: item.attributes.direction_id === 0 ? "EB" : "WB",
-          minutes
-        };
-      })
-      .filter(Boolean)
-      .slice(0, 10);
-
-    res.status(200).json(buses);
-
-  } catch (e) {
-    res.status(500).json({ error: "failed", details: e.message });
+    return buses.sort((a, b) => a.minutes - b.minutes);
   }
+
+  res.status(200).json(generateArrivals());
 }
